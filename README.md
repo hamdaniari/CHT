@@ -12,3 +12,7 @@ The modifications are:
 5. Thus, interface in solid is named "solid_to_fluid" and fluid interface is named "fluid_to_solid"
 
 Due to the mesh was not made using blockMesh, we need rename the BCs. Please take a look in "run" file
+
+How to run
+type on your terminal (ignored $)
+$./run
