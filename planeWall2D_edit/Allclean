@@ -1,0 +1,19 @@
+#!/bin/sh
+cd ${0%/*} || exit 1    # run from this directory
+
+# Source tutorial clean functions
+. $WM_PROJECT_DIR/bin/tools/CleanFunctions
+
+cleanCase
+rm -f logMeshing
+rm -rf VTK
+rm -rf constant/cellToRegion constant/polyMesh/sets
+rm -rf 0/bottomair
+rm -rf 0/topair
+rm -rf 0/wall
+rm -f 0/cellToRegion
+rm -rf constant/bottomair/polyMesh
+rm -rf constant/topair/polyMesh
+rm -rf constant/wall/polyMesh
+
+# ----------------------------------------------------------------- end-of-file

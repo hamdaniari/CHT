@@ -1,0 +1,97 @@
+##!/bin/sh
+!/bin/bash
+cd ${0%/*} || exit 1    # run from this directory
+
+
+# Source tutorial run functions
+. $WM_PROJECT_DIR/bin/tools/RunFunctions
+
+
+#------------------------------------------------------------------------------
+echo -e "  - Convert fluent mesh to a foam mesh and write sets"
+runApplication fluentMeshToFoam planeWall2D_cutCell.msh -writeSets > logMeshing
+
+#------------------------------------------------------------------------------
+echo -e "  - Convert  cellZonesSets to cellZones"
+runApplication topoSet -constant >> logMeshing
+
+#------------------------------------------------------------------------------
+echo -e "  - Split mesh based on cellZones to get two regions"
+runApplication splitMeshRegions -cellZonesOnly -overwrite >> logMeshing
+
+#------------------------------------------------------------------------------
+#echo -e "  - Clean not necessary files"
+#rm -r 0/cellToRegion 0/bottomair/cellToRegion 0/topair/cellToRegion 0/wall/cellToRegion constant/polyMesh constant/cellToRegion
+
+#------------------------------------------------------------------------------
+echo -e "  - Mesh converted successfully\n"
+
+#------------------------------------------------------------------------------
+echo -e "  - Replace the BC in the constant/bottomair/polyMesh"
+sed -i '34s/wall/empty/g' constant/bottomair/polyMesh/boundary #replace wall to empty at line 34
+sed -i '35s/wall/empty/g' constant/bottomair/polyMesh/boundary #replace wall to empty at line 35
+sed -i '41s/wall/symmetryPlane/g' constant/bottomair/polyMesh/boundary #replace wall to symmetryPlane at line 41
+sed -i '42s/wall/symmetryPlane/g' constant/bottomair/polyMesh/boundary #replace wall to symmetryPlane at line 42
+sed -i '48s/wall/mappedWall/g' constant/bottomair/polyMesh/boundary #replace wall to mappedWall at line 48
+sed -i '52isampleMode      nearestPatchFace;' constant/bottomair/polyMesh/boundary #insert sampleMode nearestPatchFace; at line 52
+sed -i '53isampleRegion    wall;' constant/bottomair/polyMesh/boundary
+sed -i '54isamplePatch     wall_to_bottomair;' constant/bottomair/polyMesh/boundary
+
+#------------------------------------------------------------------------------
+echo -e "  - Replace the BC in the constant/topair/polyMesh"
+sed -i '34s/wall/empty/g' constant/topair/polyMesh/boundary #replace wall to empty at line 34
+sed -i '35s/wall/empty/g' constant/topair/polyMesh/boundary #replace wall to empty at line 35
+sed -i '41s/wall/symmetryPlane/g' constant/topair/polyMesh/boundary #replace wall to symmetryPlane at line 41
+sed -i '42s/wall/symmetryPlane/g' constant/topair/polyMesh/boundary #replace wall to symmetryPlane at line 42
+sed -i '48s/wall/mappedWall/g' constant/topair/polyMesh/boundary #replace wall to mappedWall at line 48
+sed -i '52isampleMode      nearestPatchFace;' constant/topair/polyMesh/boundary #insert sampleMode nearestPatchFace; at line 52
+sed -i '53isampleRegion    wall;' constant/topair/polyMesh/boundary
+sed -i '54isamplePatch     wall_to_topair;' constant/topair/polyMesh/boundary
+
+#------------------------------------------------------------------------------
+echo -e "  - Replace the BC in the constant/wall/polyMesh"
+sed -i '34s/wall/empty/g' constant/wall/polyMesh/boundary #replace wall to empty at line 34
+sed -i '35s/wall/empty/g' constant/wall/polyMesh/boundary #replace wall to empty at line 35
+sed -i '41s/wall/mappedWall/g' constant/wall/polyMesh/boundary #replace wall to mappedWall at line 41
+sed -i '48s/wall/mappedWall/g' constant/wall/polyMesh/boundary #replace wall to mappedWall at line 48
+sed -i '45isampleMode      nearestPatchFace;' constant/wall/polyMesh/boundary #insert sampleMode nearestPatchFace; at line 45
+sed -i '46isampleRegion    bottomair;' constant/wall/polyMesh/boundary
+sed -i '47isamplePatch     bottomair_to_wall;' constant/wall/polyMesh/boundary
+sed -i '55isampleMode      nearestPatchFace;' constant/wall/polyMesh/boundary 
+sed -i '56isampleRegion    topair;' constant/wall/polyMesh/boundary
+sed -i '57isamplePatch     topair_to_wall;' constant/wall/polyMesh/boundary
+
+
+# remove fluid fields from solid regions (important for post-processing)
+for i in wall
+do
+   rm -f 0*/$i/{mut,alphat,epsilon,k,U,p_rgh}
+done
+
+for i in bottomair topair wall
+do
+   changeDictionary -region $i > log.changeDictionary.$i 2>&1
+done
+
+#-- Run on single processor
+runApplication `getApplication` 
+
+echo  -e "Calculation has finished"
+tail -10 log.chtMultiRegionSimpleFoam
+
+## Decompose
+#runApplication decomposePar -allRegions
+#
+## Run
+#runParallel `getApplication` 4
+#
+## Reconstruct
+#runApplication reconstructPar -allRegions
+
+# make foam file for all regions
+echo "creating files for paraview post-processing"
+for i in bottomair topair wall 
+do
+    paraFoam -region $i -touch
+done
+

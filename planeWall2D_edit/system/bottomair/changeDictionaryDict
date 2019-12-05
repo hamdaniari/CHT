@@ -1,0 +1,237 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.1.x                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      changeDictionaryDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+boundary
+{
+    bottomair_bottom
+    {
+        type            symmetryPlane;
+    }
+}
+
+U
+{
+    internalField   uniform (0.01 0 0);
+
+    boundaryField
+    {
+        inlet-bottomair
+        {
+            type            fixedValue;
+            value           uniform ( 0.1 0 0 );
+        }
+
+        outlet-bottomair
+        {
+            type            inletOutlet;
+            inletValue      uniform ( 0 0 0 );
+            value           uniform ( 0.1 0 0 );
+        }
+		
+		 frontandback-bottomair
+        {
+            type            empty;
+        }
+
+        bottomair_bottom
+        {
+            type            symmetryPlane;
+        }
+        
+        "bottomair_to_.*"
+        {
+            type            fixedValue;
+            value           uniform (0 0 0);
+        }
+    }
+}
+
+T
+{
+    internalField   uniform 500;
+
+    boundaryField
+    {
+        inlet-bottomair
+        {
+            type            fixedValue;
+            value           uniform 500;
+        }
+
+        outlet-bottomair
+        {
+            type            zeroGradient;
+        }
+		
+		 frontandback-bottomair
+        {
+            type            empty;
+        }
+
+        bottomair_bottom
+        {
+            type            symmetryPlane;
+        }
+
+        "bottomair_to_.*"
+        {
+            type            compressible::turbulentTemperatureCoupledBaffleMixed;
+            Tnbr            T;
+            kappaMethod     fluidThermo;
+            kappaName       none;
+            value           uniform 300;
+        }
+    }
+}
+
+epsilon
+{
+    internalField   uniform 0.01;
+
+    boundaryField
+    {
+        inlet-bottomair
+        {
+            type            inletOutlet;
+            inletValue      uniform 0.01;
+            value           uniform 0.01;
+        }
+
+        outlet-bottomair
+        {
+            type            fixedValue;
+            value           uniform 0.01;
+        }
+		
+		 frontandback-bottomair
+        {
+            type            empty;
+        }
+
+        bottomair_bottom
+        {
+            type            symmetryPlane;
+        }
+
+        "bottomair_to_.*"
+        {
+            type            compressible::epsilonWallFunction;
+            value           uniform 0.01;
+        }
+    }
+}
+
+k
+{
+    internalField   uniform 0.1;
+
+    boundaryField
+    {
+        inlet-bottomair
+        {
+            type            inletOutlet;
+            inletValue      uniform 0.1;
+            value           uniform 0.1;
+        }
+
+        outlet-bottomair
+        {
+            type            fixedValue;
+            value           uniform 0.1;
+        }
+		
+		 frontandback-bottomair
+        {
+            type            empty;
+        }
+
+        bottomair_bottom
+        {
+            type            symmetryPlane;
+        }
+
+        "bottomair_to_.*"
+        {
+            type            compressible::kqRWallFunction;
+            value           uniform 0.1;
+        }
+    }
+}
+
+p_rgh
+{
+    internalField   uniform 1e5;
+
+    boundaryField
+    {
+        ".*"
+        {
+            type            fixedFluxPressure;
+            value           uniform 1e5;
+        }
+
+        bottomair_bottom
+        {
+            type            symmetryPlane;
+        }
+
+        outlet-bottomair
+        {
+            type            fixedMean;
+            meanValue       uniform 1e5;
+            value           uniform 1e5;
+        }
+
+        frontandback-bottomair
+        {
+            type            empty;
+        }
+      
+    }
+}
+
+p
+{
+    internalField   uniform 1e5;
+
+    boundaryField
+    {
+        ".*"
+        {
+            type            calculated;
+            value           uniform 1e5;
+        }
+
+        bottomair_bottom
+        {
+            type            symmetryPlane;
+        }
+
+        inlet-bottomair
+        {
+            type            calculated;
+            value           uniform 1e5;
+        }
+
+        frontandback-bottomair
+        {
+            type            empty;
+        }
+      
+    }
+}
+
+// ************************************************************************* //
