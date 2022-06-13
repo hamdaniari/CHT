@@ -1,5 +1,5 @@
 # CHT
-Tutorial of Conjugate Heat Transfer 
+Tutorial of Conjugate Heat Transfer in OpenFOAM
 
 This tutorial is based on the tutorial from wiki
 https://openfoamwiki.net/index.php/Getting_started_with_chtMultiRegionSimpleFoam_-_planeWall2D
